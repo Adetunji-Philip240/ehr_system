@@ -1,0 +1,79 @@
+:root {
+  --color1: #bf0f14;
+  --color2: #f8f8ff;
+  --color3: #2a8ef1;
+}
+
+li {
+  list-style: none;
+}
+a {
+  text-decoration: none;
+}
+
+/*Sidebar*/
+.w3-sidebar {
+  background-color: rgba(247, 244, 244, 0.7);
+  margin: 5px;
+  border-radius: 10px;
+}
+
+.w3-sidebar a {
+  margin-top: 15px;
+  font-size: 18px;
+  color: var(--color3);
+}
+
+.w3-sidebar a:hover {
+  background-color: var(--color3);
+  color: var(--color2);
+  border-radius: 0 10px 10px 0;
+}
+.page-content {
+  margin-left: 21%;
+}
+.top-bar {
+  background-color: rgba(241, 239, 239, 0.7);
+  border-radius: 0 0 40px 40px;
+  box-shadow:
+    rgba(0, 0, 0, 0.16) 0px 3px 6px,
+    rgba(0, 0, 0, 0.23) 0px 3px 6px;
+}
+.logo {
+  width: 60px;
+}
+
+/*Bottom Navbar*/
+#bottom-navbar {
+  background-color: var(--color3);
+}
+
+#bottom-navbar a {
+  color: var(--color2);
+  text-align: center;
+}
+
+.blockA {
+  border-radius: 20px;
+  padding: 20px;
+  box-shadow: rgba(0, 0, 0, 0.35) 0px 5px 15px;
+}
+
+.btnA {
+  padding: 10px 20px;
+  background-color: var(--color3);
+  border: none;
+  border-radius: 5px;
+  color: var(--color2);
+}
+
+/*For Mobile Screen*/
+@media (max-width: 767px) {
+  /*Sidebar */
+  .w3-sidebar {
+    display: none;
+  }
+  .page-content {
+    margin-left: 0;
+  }
+}
