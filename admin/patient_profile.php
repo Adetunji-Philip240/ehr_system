@@ -3,6 +3,7 @@
   require_once "../backend/db.php";
 
   $patient_id = $_GET['id'];
+  $r_search = '';
 
   // Patient details
   $sql = "
@@ -16,7 +17,11 @@
   $stmt->execute();
   $patient = $stmt->get_result()->fetch_assoc();
   // Count records
-  $records = $conn->query("SELECT COUNT(*) as total FROM records WHERE patient_id=$patient_id")->fetch_assoc()['total'];
+  $records = $conn->query("
+  SELECT COUNT(*) as total
+  FROM records
+  WHERE patient_id = $patient_id
+")->fetch_assoc()['total'];
   ?>
 
 
@@ -41,9 +46,38 @@
 
     <!--Custom CSS-->
     <link rel="stylesheet" href="../styles.css" />
+
     <style>
       table {
         font-size: 12px;
+      }
+
+      .block1 {
+
+        width: 95%;
+        margin: auto;
+        border: 1px solid var(--color3);
+        border-radius: 20px;
+        padding: 15px;
+        box-shadow: rgba(0, 0, 0, 0.24) 0px 3px 8px;
+      }
+
+      .block2a {
+        border-right: 3px dotted var(--color3);
+      }
+
+      .block3 {
+        border: 1px solid var(--color3);
+        border-radius: 20px;
+        padding: 15px;
+        box-shadow: rgba(0, 0, 0, 0.24) 0px 3px 8px;
+      }
+
+      /*For Mobile Screen*/
+      @media (max-width: 767px) {
+        .block2a {
+          border-right: none;
+        }
       }
     </style>
   </head>
@@ -51,9 +85,9 @@
   <body>
     <div class="container-fluid p-5">
       <img src="../images/logo.png" class="mx-auto d-block logo" alt="" />
-      <a href="patients.php"><button class="btnA mt-2 float-end">Back</button></a>
-      <div class="row mt-5">
-        <div class="col-sm-6 mb-3">
+      <a href="patients.php"><button class="btnA mt-2 mb-3 float-end">Back</button></a>
+      <div class="row mt-5 block1">
+        <div class="col-sm-6 mb-3 block2a">
           <p><b>Patient Code:</b> <span><?= $patient['patient_code'] ?></span></p>
           <p><b>Name:</b> <span><?= $patient['full_name'] ?></span></p>
           <p><b>Gender:</b> <span><?= $patient['gender'] ?></span></p>
@@ -77,135 +111,74 @@
         </div>
       </div>
 
-      <div class="container mt-2">
-        <h4>Doctor(s) Assigned To</h4>
+      <div class="container mt-5">
 
-        <div class="table-responsive-sm">
+
+        <h4>Doctor(s) Assigned To</h4>
+        <div class="row">
+          <div class="col-sm-6 mb-2">
+            <input type="text" id="doctorSearch" class="form-control" placeholder="Search doctor...">
+          </div>
+          <div class="col-sm-6 mb-2">
+            <select id="doctorStatus" class="form-control ">
+              <option value="">All Status</option>
+              <option value="Active">Active</option>
+              <option value="Released">Released</option>
+            </select>
+          </div>
+        </div>
+        <div class="table-responsive-sm block3">
           <table class="table table-hover">
             <thead>
               <tr>
                 <th>S/N</th>
                 <th>Doctor ID</th>
                 <th>Full Name</th>
-                <th>Number of Records</th>
+                <th>Records</th>
                 <th>Assigned Date</th>
                 <th>Released Date</th>
               </tr>
             </thead>
-            <tbody>
-              <?php
-              $sql = "
-  SELECT d.*, a.assigned_date, a.released_date, a.status
-  FROM assignments a
-  JOIN doctors d ON a.doctor_id = d.id
-  WHERE a.patient_id = $patient_id
-  ";
-
-              $result = $conn->query($sql);
-              $sn = 1;
-
-              while ($row = $result->fetch_assoc()) {
-              ?>
-                <tr>
-                  <td><?= $sn++ ?></td>
-                  <td><?= $row['doctor_code'] ?></td>
-                  <td><?= $row['full_name'] ?></td>
-                  <td>
-                    <?= $conn->query("SELECT COUNT(*) as total FROM records WHERE doctor_id={$row['id']} AND patient_id=$patient_id")->fetch_assoc()['total']; ?>
-                  </td>
-                  <td><?= date("d M Y", strtotime($row['assigned_date'])) ?></td>
-
-                  <td>
-                    <?= $row['released_date']
-                      ? date("d M Y", strtotime($row['released_date']))
-                      : '<span class="text-success">Active</span>' ?>
-                  </td>
-                </tr>
-              <?php } ?>
-            </tbody>
+            <tbody id="doctorTable"></tbody>
           </table>
         </div>
+        <div id="doctorPagination" class="mt-2"></div>
       </div>
 
-      <div class="container mt-2">
-        <div class="row">
-          <div class="col-sm-6 mb-3">
-            <h4>Records</h4>
-            <div class="table-responsive-sm">
-              <table class="table table-hover">
-                <thead>
-                  <tr>
-                    <th>S/N</th>
-                    <th>Doctor ID</th>
-                    <th>Download Record</th>
-                    <th>Date Submitted</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <?php
-                  $sql = "SELECT * FROM records WHERE patient_id=$patient_id";
-                  $result = $conn->query($sql);
-                  $sn = 1;
+      <div class="container mt-2 mx-auto w-75">
 
-                  while ($row = $result->fetch_assoc()) {
-                  ?>
-                    <tr>
-                      <td><?= $sn++ ?></td>
-                      <td><?= $row['doctor_id'] ?></td>
-                      <td>
-                        <a href="../uploads/<?= $row['id'] ?>.pdf" target="_blank">
-                          Download
-                        </a>
-                      </td>
-                      <td><?= date("d M Y", strtotime($row['created_at'] ?? date("Y-m-d"))) ?></td>
-                    </tr>
-                  <?php } ?>
-                </tbody>
-              </table>
-            </div>
+        <h4>List of Records</h4>
+
+        <form id="recordSearchForm" class="row mb-2">
+          <input type="hidden" name="id" value="<?= $patient_id ?>">
+          <div class="mt-2">
+
+            <input type="text" name="r_search" class="form-control" placeholder="Search record code...">
           </div>
 
-          <div class="col-sm-6 mb-3">
-            <p>Send Message to <span id="full_name"></span></p>
-            <form action="../backend/send_patient_message.php" method="POST">
-              <input type="hidden" name="patient_id" value="<?= $patient_id ?>">
-              <textarea name="message" class="form-control" required></textarea>
-              <button class="btnA mt-2">Send</button>
-            </form>
+        </form>
+        <div class="table-responsive-sm block3">
+          <table class="table table-hover">
+            <thead>
+              <tr>
+                <th>S/N</th>
+                <th>Record Code</th>
+                <th>Date of Submit</th>
+                <th>View Record</th>
+              </tr>
+            </thead>
 
-            <div class="table-responsive-sm">
-              <table class="table table-hover">
-                <thead>
-                  <tr>
-                    <th>S/N</th>
-                    <th>Message</th>
-                    <th>Date</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <?php
-                  $sql = "SELECT * FROM patient_messages WHERE patient_id=? ORDER BY created_at DESC";
-                  $stmt = $conn->prepare($sql);
-                  $stmt->bind_param("i", $patient_id);
-                  $stmt->execute();
-                  $result = $stmt->get_result();
 
-                  $sn = 1;
+            <tbody id="recordsTable"></tbody>
 
-                  while ($row = $result->fetch_assoc()) {
-                  ?>
-                    <tr>
-                      <td><?= $sn++ ?></td>
-                      <td><?= htmlspecialchars($row['message']) ?></td>
-                      <td><?= date("d M Y H:i", strtotime($row['created_at'])) ?></td>
-                    </tr>
-                  <?php } ?>
-                </tbody>
-              </table>
-            </div>
-          </div>
+          </table>
         </div>
+
+        <div id="recordsPagination" class="mt-2"></div>
       </div>
+
+
+
     </div>
     <!--Bootstrap-->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
@@ -253,6 +226,82 @@
       </div>
     </div>
 
+
+
+    <!--Assignments-->
+    <script>
+      function loadDoctors(page = 1) {
+
+        let search = document.getElementById("doctorSearch").value;
+        let status = document.getElementById("doctorStatus").value;
+
+        fetch(`../backend/fetch_patient_doctors.php?
+    patient_id=<?= $patient_id ?>&
+    page=${page}&
+    search=${search}&
+    status=${status}
+  `)
+          .then(res => res.json())
+          .then(data => {
+            document.getElementById("doctorTable").innerHTML = data.table;
+            document.getElementById("doctorPagination").innerHTML = data.pagination;
+
+            document.querySelectorAll(".doctor-page").forEach(btn => {
+              btn.addEventListener("click", () => {
+                loadDoctors(btn.dataset.page);
+              });
+            });
+          });
+      }
+
+      // SEARCH (no reload)
+      document.getElementById("doctorSearch").addEventListener("keyup", () => {
+        loadDoctors(1);
+      });
+
+      // FILTER
+      document.getElementById("doctorStatus").addEventListener("change", () => {
+        loadDoctors(1);
+      });
+
+      loadDoctors();
+    </script>
+
+
+    <!--For Records-->
+    <script>
+      function loadRecords(page = 1) {
+        let search = document.querySelector("input[name='r_search']").value || '';
+
+        fetch(`../backend/fetch_records.php?id=<?= $patient_id ?>&r_page=${page}&r_search=${search}`)
+          .then(res => res.json())
+          .then(data => {
+            document.getElementById("recordsTable").innerHTML = data.table;
+            document.getElementById("recordsPagination").innerHTML = data.pagination;
+
+            // attach click events
+            document.querySelectorAll(".page-btn").forEach(btn => {
+              btn.addEventListener("click", () => {
+                loadRecords(btn.dataset.page);
+              });
+            });
+          });
+      }
+
+      // PREVENT FORM SUBMIT (no reload)
+      document.getElementById("recordSearchForm").addEventListener("submit", function(e) {
+        e.preventDefault(); // 🚨 stops page reload
+        loadRecords(1);
+      });
+
+      // SEARCH (no reload)
+      document.querySelector("[name='r_search']").addEventListener("keyup", () => {
+        loadRecords(1);
+      });
+
+      // INITIAL LOAD
+      loadRecords();
+    </script>
     <!--Custom JS-->
     <script src="../index.js"></script>
   </body>

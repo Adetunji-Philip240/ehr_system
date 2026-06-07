@@ -42,7 +42,7 @@ session_start();
     <div class="top-bar d-flex justify-content-between p-4 fs-3">
       <li>Hello Admin</li>
       <li>
-        <a href="admin-logout.php"><i class="fas fa-sign-out-alt"></i></a>
+        <a href="../backend/logout.php"><i class="fas fa-sign-out-alt"></i></a>
       </li>
     </div>
 
@@ -106,54 +106,54 @@ session_start();
 
   <!--Restricting user from selecting date higher than the current date-->
   <script>
-  // run after DOM is loaded
+    // run after DOM is loaded
 
-  document.addEventListener("DOMContentLoaded", function() {
-    const dateInput = document.querySelector(
-      'input[name="dob"][type="date"]',
-    );
+    document.addEventListener("DOMContentLoaded", function() {
+      const dateInput = document.querySelector(
+        'input[name="dob"][type="date"]',
+      );
 
-    if (!dateInput) return;
+      if (!dateInput) return;
 
-    const today = new Date();
+      const today = new Date();
 
-    // format YYYY-MM-DD
+      // format YYYY-MM-DD
 
-    const yyyy = today.getFullYear();
+      const yyyy = today.getFullYear();
 
-    const mm = String(today.getMonth() + 1).padStart(2, "0");
+      const mm = String(today.getMonth() + 1).padStart(2, "0");
 
-    const dd = String(today.getDate()).padStart(2, "0");
+      const dd = String(today.getDate()).padStart(2, "0");
 
-    const maxDate = `${yyyy}-${mm}-${dd}`;
+      const maxDate = `${yyyy}-${mm}-${dd}`;
 
-    dateInput.setAttribute("max", maxDate);
+      dateInput.setAttribute("max", maxDate);
 
-    // Optional: if the current value is later than today, clear it
+      // Optional: if the current value is later than today, clear it
 
-    if (dateInput.value && dateInput.value > maxDate) {
-      dateInput.value = "";
-    }
-  });
+      if (dateInput.value && dateInput.value > maxDate) {
+        dateInput.value = "";
+      }
+    });
   </script>
 
   <!--Bootstrap-->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
   <?php if (isset($_SESSION['patient_created'])): ?>
-  <div class="position-fixed bottom-0 end-0 p-3" style="z-index:9999;">
-    <div class="toast show text-bg-primary">
-      <div class="toast-header">
-        <strong class="me-auto">Patient Created 🎉</strong>
-      </div>
-      <div class="toast-body">
-        Username: <b><?= $_SESSION['patient_created']['username'] ?></b><br>
-        Password: <b><?= $_SESSION['patient_created']['password'] ?></b>
+    <div class="position-fixed bottom-0 end-0 p-3" style="z-index:9999;">
+      <div class="toast show text-bg-primary">
+        <div class="toast-header">
+          <strong class="me-auto">Patient Created 🎉</strong>
+        </div>
+        <div class="toast-body">
+          Username: <b><?= $_SESSION['patient_created']['username'] ?></b><br>
+          Password: <b><?= $_SESSION['patient_created']['password'] ?></b>
+        </div>
       </div>
     </div>
-  </div>
 
-  <?php unset($_SESSION['patient_created']); ?>
+    <?php unset($_SESSION['patient_created']); ?>
   <?php endif; ?>
 
   <!--Custom JS-->

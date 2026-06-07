@@ -25,17 +25,18 @@ $doctor_name = $doctor['full_name'];
 // GET PATIENTS (ACTIVE + RELEASED)
 // =========================
 $sql = "
-SELECT 
-  p.*, 
-  a.status, 
-  a.assigned_date, 
-  a.released_date
+SELECT p.*, a.status, a.assigned_date, a.released_date
 FROM assignments a
 JOIN patients p ON a.patient_id = p.id
 WHERE a.doctor_id = ?
+AND a.assigned_date = (
+    SELECT MAX(a2.assigned_date)
+    FROM assignments a2
+    WHERE a2.patient_id = a.patient_id
+    AND a2.doctor_id = a.doctor_id
+)
 ORDER BY a.assigned_date DESC
 ";
-
 $stmt = $conn->prepare($sql);
 $stmt->bind_param("i", $doctor_id);
 $stmt->execute();
@@ -83,7 +84,7 @@ $result = $stmt->get_result();
           color: var(--color2);
           border-radius: 0 10px 10px 0;
         " class="w3-bar-item py-3"><i class="fas fa-user mx-3 fs-4"></i>PATIENTS</a>
-    <a href="/" class="w3-bar-item py-3"><i class="fas fa-clipboard mx-3 fs-4"></i>RECORDS</a>
+
   </div>
 
   <!--Page Content-->
@@ -94,7 +95,7 @@ $result = $stmt->get_result();
         Hello Dr. <?= $doctor_name ?> (<?= $doctor['doctor_code'] ?>)
       </li>
       <li>
-        <a href="admin-logout.php"><i class="fas fa-sign-out-alt"></i></a>
+        <a href="../backend/logout.php"><i class="fas fa-sign-out-alt"></i></a>
       </li>
     </div>
 
@@ -177,6 +178,23 @@ $result = $stmt->get_result();
         </table>
       </div>
       <div id="paginationContainer"></div>
+    </div>
+  </div>
+
+  <div style="margin-top: 100px"></div>
+  <!--Bottom Navbar-->
+
+  <div id="bottom-navbar" class="navbar navbar-expand-sm fixed-bottom d-lg-none d-md-none">
+    <div class="container-fluid d-flex justify-content-between">
+      <a href="dashboard.php"> <i class=" fas fa-chart-line mx-3 fs-4"></i> <br /><span
+          style="font-size: 10px">DASHBOARD</span></a>
+
+      <a style="
+            border: 1px solid var(--color2);
+            color: var(--color2);
+            padding: 5px;
+            border-radius: 10px;"><i class="fas fa-user mx-3 fs-4"></i> <br /><span
+          style="font-size: 10px">PATIENTS</span></a>
     </div>
   </div>
 

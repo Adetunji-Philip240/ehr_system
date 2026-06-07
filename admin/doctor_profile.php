@@ -46,9 +46,37 @@ $countRecords = $conn->query("SELECT COUNT(*) as total FROM records WHERE doctor
   <link rel="stylesheet" href="../styles.css" />
 
   <style>
-  table {
-    font-size: 12px;
-  }
+    table {
+      font-size: 12px;
+    }
+
+    .block1 {
+
+      width: 95%;
+      margin: auto;
+      border: 1px solid var(--color3);
+      border-radius: 20px;
+      padding: 15px;
+      box-shadow: rgba(0, 0, 0, 0.24) 0px 3px 8px;
+    }
+
+    .block2a {
+      border-right: 3px dotted var(--color3);
+    }
+
+    .block3 {
+      border: 1px solid var(--color3);
+      border-radius: 20px;
+      padding: 15px;
+      box-shadow: rgba(0, 0, 0, 0.24) 0px 3px 8px;
+    }
+
+    /*For Mobile Screen*/
+    @media (max-width: 767px) {
+      .block2a {
+        border-right: none;
+      }
+    }
   </style>
 </head>
 
@@ -56,9 +84,9 @@ $countRecords = $conn->query("SELECT COUNT(*) as total FROM records WHERE doctor
   <div class="container-fluid p-5">
     <img src="../images/logo.png" class="mx-auto d-block logo" alt="" />
 
-    <a href="doctors.php"><button class="btnA mt-2 float-end">Back</button></a>
-    <div class="row mt-5">
-      <div class="col-sm-6 mb-3">
+    <a href="doctors.php"><button class="btnA mt-2 mb-3 float-end">Back</button></a>
+    <div class="row mt-5 block1">
+      <div class="col-sm-6 mb-3 block2a">
         <p><b>Doctor Code:</b> <span><?= $doctor['doctor_code'] ?></span></p>
         <p><b>Name:</b> <span><?= $doctor['full_name'] ?></span></p>
         <p><b>Gender:</b> <span><?= $doctor['gender'] ?></span></p>
@@ -86,7 +114,7 @@ $countRecords = $conn->query("SELECT COUNT(*) as total FROM records WHERE doctor
 
 
 
-    <div class="container">
+    <div class="container mt-5">
       <form action="../backend/assign_patient.php" method="POST">
         <input type="hidden" name="doctor_id" value="<?= $doctor_id ?>">
 
@@ -110,7 +138,21 @@ $countRecords = $conn->query("SELECT COUNT(*) as total FROM records WHERE doctor
         <button class="btnA mt-2">Assign Patient</button>
       </form>
 
-      <div class="table-responsive-sm">
+      <form id="assignmentForm" class="row mb-2 mt-2">
+        <div class="col-md-6 mb-2">
+          <input type="text" name="a_search" class="form-control" placeholder="Search patient name...">
+        </div>
+
+        <div class="col-md-6 mb-2">
+          <select name="a_status" class="form-control">
+            <option value="">All Status</option>
+            <option value="Active">Active</option>
+            <option value="Released">Released</option>
+          </select>
+        </div>
+
+      </form>
+      <div class="table-responsive-sm block3">
         <table class="table table-hover">
           <thead>
             <tr>
@@ -118,129 +160,22 @@ $countRecords = $conn->query("SELECT COUNT(*) as total FROM records WHERE doctor
               <th>Patient ID</th>
               <th>Full Name</th>
               <th>Gender</th>
-              <th>Records</th>
+              <!-- <th>Records</th> -->
 
               <th>Status</th>
               <th>Assigned Date</th>
               <th>Released Date</th>
-              <th>View</th>
+              <th>Action</th>
             </tr>
           </thead>
 
-          <tbody>
-            <?php
-            $sql = "
-SELECT p.*, a.status, a.assigned_date, a.released_date,
-(SELECT COUNT(*) FROM records WHERE patient_id=p.id) as total_records
-FROM assignments a
-JOIN patients p ON a.patient_id = p.id
-WHERE a.doctor_id = $doctor_id
-ORDER BY a.assigned_date DESC
-";
-
-            $result = $conn->query($sql);
-            $sn = 1;
-
-            while ($row = $result->fetch_assoc()) {
-            ?>
-            <tr>
-              <td><?= $sn++ ?></td>
-              <td><?= $row['patient_code'] ?></td>
-              <td><?= $row['full_name'] ?></td>
-              <td><?= $row['gender'] ?></td>
-              <td><?= $row['total_records'] ?></td>
-
-              <td>
-                <?php if ($row['status'] == 'Active') { ?>
-                <span class="badge bg-success">Active</span>
-                <?php } else { ?>
-                <span class="badge bg-secondary">Released</span>
-                <?php } ?>
-              </td>
-
-              <td><?= date("d M Y", strtotime($row['assigned_date'])) ?></td>
-
-              <td>
-                <?= $row['released_date']
-                    ? date("d M Y", strtotime($row['released_date']))
-                    : '-' ?>
-              </td>
-              <td>
-                <a href="../backend/remove_assignment.php?doctor_id=<?= $doctor_id ?>&patient_id=<?= $row['id'] ?>"
-                  class="btn btn-danger btn-sm" onclick="return confirm('Release this patient from doctor?');">
-                  Release
-                </a>
-                <a href="patient_profile.php?id=<?= $row['id'] ?>" class="btn btn-primary btn-sm">
-                  View
-                </a>
-              </td>
-            </tr>
-            <?php } ?>
-          </tbody>
+          <tbody id="assignmentsTable"></tbody>
         </table>
       </div>
 
-      <div class="mt-3">
-        <div class="row">
-          <div class="col-sm-6 mb-3">
-            <h3>Messages</h3>
-            <div class="table-responsive-sm">
-              <table class="table table-hover">
-                <thead>
-                  <tr>
-                    <th>S/N</th>
-                    <th>Message</th>
-                    <th>Date (message)</th>
-                    <th>Reply</th>
-                    <th>Date (reply)</th>
-                  </tr>
-                </thead>
-                <tbody></tbody>
-              </table>
-            </div>
-          </div>
-          <div class="col-sm-6 mb-3">
-            <p>Send Message to Doctor <span><?= $doctor['full_name'] ?></span></p>
+      <div id="assignmentsPagination" class="mt-2"></div>
 
-            <form action="../backend/send_message.php" method="POST">
-              <input type="hidden" name="doctor_id" value="<?= $doctor_id ?>">
-              <textarea name="message" class="form-control" required></textarea>
-              <button class="btnA mt-2">Send</button>
-            </form>
 
-            <div class="table-responsive-sm">
-              <table class="table table-hover">
-                <thead>
-                  <tr>
-                    <th>S/N</th>
-                    <th>Message</th>
-                    <th>Date</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <?php
-                  $sql = "SELECT * FROM messages WHERE doctor_id=? ORDER BY created_at DESC";
-                  $stmt = $conn->prepare($sql);
-                  $stmt->bind_param("i", $doctor_id);
-                  $stmt->execute();
-                  $result = $stmt->get_result();
-
-                  $sn = 1;
-
-                  while ($row = $result->fetch_assoc()) {
-                  ?>
-                  <tr>
-                    <td><?= $sn++ ?></td>
-                    <td><?= htmlspecialchars($row['message']) ?></td>
-                    <td><?= date("d M Y H:i", strtotime($row['created_at'])) ?></td>
-                  </tr>
-                  <?php } ?>
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-      </div>
     </div>
   </div>
 
@@ -248,18 +183,18 @@ ORDER BY a.assigned_date DESC
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
   <?php if (isset($_SESSION['password_reset'])): ?>
-  <div class="position-fixed bottom-0 end-0 p-3" style="z-index:9999;">
-    <div class="toast show text-bg-success">
-      <div class="toast-header">
-        <strong class="me-auto">Password Reset</strong>
-      </div>
-      <div class="toast-body">
-        New Password: <b><?= $_SESSION['password_reset']['password'] ?></b>
+    <div class="position-fixed bottom-0 end-0 p-3" style="z-index:9999;">
+      <div class="toast show text-bg-success">
+        <div class="toast-header">
+          <strong class="me-auto">Password Reset</strong>
+        </div>
+        <div class="toast-body">
+          New Password: <b><?= $_SESSION['password_reset']['password'] ?></b>
+        </div>
       </div>
     </div>
-  </div>
 
-  <?php unset($_SESSION['password_reset']); ?>
+    <?php unset($_SESSION['password_reset']); ?>
   <?php endif; ?>
 
 
@@ -294,6 +229,70 @@ ORDER BY a.assigned_date DESC
     </div>
   </div>
 
+
+
+  <!--For Assignments-->
+  <script>
+    function loadAssignments(page = 1) {
+      let search = document.querySelector("[name='a_search']").value;
+      let status = document.querySelector("[name='a_status']").value;
+
+      fetch(
+          `../backend/fetch_doc_assignments.php?doctor_id=<?= $doctor_id ?>&page=${page}&search=${encodeURIComponent(search)}&status=${status}`
+        )
+        .then(res => res.json())
+        .then(data => {
+          document.getElementById("assignmentsTable").innerHTML = data.table;
+          document.getElementById("assignmentsPagination").innerHTML = data.pagination;
+
+          document.querySelectorAll(".a-page-btn").forEach(btn => {
+            btn.addEventListener("click", () => {
+              loadAssignments(btn.dataset.page);
+            });
+          });
+        });
+    }
+
+    // prevent reload
+    document.getElementById("assignmentForm").addEventListener("submit", function(e) {
+      e.preventDefault();
+      loadAssignments(1);
+    });
+
+    // live search
+    document.querySelector("[name='a_search']").addEventListener("keyup", () => {
+      loadAssignments(1);
+    });
+
+    // filter change
+    document.querySelector("[name='a_status']").addEventListener("change", () => {
+      loadAssignments(1);
+    });
+
+    // initial load
+    loadAssignments();
+  </script>
+
+  <!--For Messages-->
+
+  <!-- <script>
+  function loadMessages(page = 1) {
+    fetch(`../backend/fetch_messages.php?doctor_id=<?= $doctor_id ?>&page=${page}`)
+      .then(res => res.json())
+      .then(data => {
+        document.getElementById("messagesTable").innerHTML = data.table;
+        document.getElementById("messagesPagination").innerHTML = data.pagination;
+
+        document.querySelectorAll(".m-page-btn").forEach(btn => {
+          btn.addEventListener("click", () => {
+            loadMessages(btn.dataset.page);
+          });
+        });
+      });
+  }
+
+  loadMessages();
+  </script> -->
 
 
 

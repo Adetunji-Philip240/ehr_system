@@ -30,9 +30,9 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] != 'Admin') {
   <link rel="stylesheet" href="../styles.css" />
 
   <style>
-  table {
-    font-size: 12px;
-  }
+    table {
+      font-size: 12px;
+    }
   </style>
 </head>
 
@@ -57,7 +57,7 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] != 'Admin') {
     <div class="top-bar d-flex justify-content-between p-4 fs-3">
       <li>Hello Admin</li>
       <li>
-        <a href="admin-logout.php"><i class="fas fa-sign-out-alt"></i></a>
+        <a href="../backend/logout.php"><i class="fas fa-sign-out-alt"></i></a>
       </li>
     </div>
 
@@ -125,27 +125,27 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] != 'Admin') {
 
             while ($row = $result->fetch_assoc()) {
             ?>
-            <tr>
-              <td><?= $sn++ ?></td>
-              <td><?= $row['doctor_code'] ?></td>
-              <td><?= $row['full_name'] ?></td>
-              <td><?= $row['gender'] ?></td>
-              <td><?= $row['specialization'] ?></td>
-              <td><?= $row['department'] ?></td>
-              <td><?= $row['phone'] ?></td>
-              <td><?= $row['email'] ?></td>
-              <td><?= $row['total_patients'] ?></td>
-              <td><?= date("d M Y", strtotime($row['date_joined'])) ?></td>
-              <td>
-                <a href="../backend/delete_doctor.php?id=<?= $row['id'] ?>" class="btn btn-danger btn-sm"
-                  onclick="return confirm('Are you sure you want to delete this doctor?');">
-                  Delete
-                </a>
-                <a href="doctor_profile.php?id=<?= $row['id'] ?>" class="btn btn-primary btn-sm">
-                  View
-                </a>
-              </td>
-            </tr>
+              <tr>
+                <td><?= $sn++ ?></td>
+                <td><?= $row['doctor_code'] ?></td>
+                <td><?= $row['full_name'] ?></td>
+                <td><?= $row['gender'] ?></td>
+                <td><?= $row['specialization'] ?></td>
+                <td><?= $row['department'] ?></td>
+                <td><?= $row['phone'] ?></td>
+                <td><?= $row['email'] ?></td>
+                <td><?= $row['total_patients'] ?></td>
+                <td><?= date("d M Y", strtotime($row['date_joined'])) ?></td>
+                <td>
+                  <a href="../backend/delete_doctor.php?id=<?= $row['id'] ?>" class="btn btn-danger btn-sm"
+                    onclick="return confirm('Are you sure you want to delete this doctor?');">
+                    Delete
+                  </a>
+                  <a href="doctor_profile.php?id=<?= $row['id'] ?>" class="btn btn-primary btn-sm">
+                    View
+                  </a>
+                </td>
+              </tr>
             <?php } ?>
           </tbody>
         </table>
@@ -156,93 +156,114 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] != 'Admin') {
       </nav>
 
       <button class="btn btn-success mb-3 float-end" onclick="exportDoctorsPDF()">
-        Export as PDF
+        Export PDF
       </button>
     </div>
   </div>
 
 
+  <div style="margin-top: 150px"></div>
+  <!--Bottom Navbar-->
+
+  <div id="bottom-navbar" class="navbar navbar-expand-sm fixed-bottom d-lg-none d-md-none">
+    <div class="container-fluid d-flex justify-content-between">
+      <a " href=" dashboard.php"><i class="fas fa-chart-line mx-3 fs-4"></i> <br /><span
+          style="font-size: 10px">DASHBOARD</span></a>
+
+      <a style="
+            border: 1px solid var(--color2);
+            color: var(--color2);
+            padding: 5px;
+            border-radius: 10px;"><i class=" fas fa-user-md mx-3 fs-4"></i> <br /><span
+          style="font-size: 10px">DOCTORS</span></a>
+
+      <a href="patients.php"><i class="fas fa-user mx-3 fs-4"></i> <br /><span
+          style="font-size: 10px">PATIENTS</span></a>
+    </div>
+  </div>
+
+
   <script>
-  const rowsPerPage = 5;
-  let currentPage = 1;
+    const rowsPerPage = 5;
+    let currentPage = 1;
 
-  const tableRows = Array.from(document.querySelectorAll("#doctorTable tr"));
+    const tableRows = Array.from(document.querySelectorAll("#doctorTable tr"));
 
-  function filterRows() {
-    let search = document.getElementById("searchInput").value.toLowerCase();
-    let department = document.getElementById("departmentFilter").value.toLowerCase();
-    let gender = document.getElementById("genderFilter").value.toLowerCase();
+    function filterRows() {
+      let search = document.getElementById("searchInput").value.toLowerCase();
+      let department = document.getElementById("departmentFilter").value.toLowerCase();
+      let gender = document.getElementById("genderFilter").value.toLowerCase();
 
-    return tableRows.filter(row => {
-      let text = row.innerText.toLowerCase();
-      let dept = row.cells[4].innerText.toLowerCase();
-      let gen = row.cells[3].innerText.toLowerCase();
+      return tableRows.filter(row => {
+        let text = row.innerText.toLowerCase();
+        let dept = row.cells[4].innerText.toLowerCase();
+        let gen = row.cells[3].innerText.toLowerCase();
 
-      return (
-        text.includes(search) &&
-        (department === "" || dept.includes(department)) &&
-        (gender === "" || gen.includes(gender))
-      );
-    });
-  }
+        return (
+          text.includes(search) &&
+          (department === "" || dept.includes(department)) &&
+          (gender === "" || gen.includes(gender))
+        );
+      });
+    }
 
-  function displayTable() {
-    let filtered = filterRows();
+    function displayTable() {
+      let filtered = filterRows();
 
-    tableRows.forEach(row => row.style.display = "none");
+      tableRows.forEach(row => row.style.display = "none");
 
-    let start = (currentPage - 1) * rowsPerPage;
-    let end = start + rowsPerPage;
+      let start = (currentPage - 1) * rowsPerPage;
+      let end = start + rowsPerPage;
 
-    filtered.slice(start, end).forEach(row => {
-      row.style.display = "";
-    });
-
-    setupPagination(filtered.length);
-  }
-
-  function setupPagination(totalRows) {
-    const pagination = document.getElementById("pagination");
-    pagination.innerHTML = "";
-
-    let pageCount = Math.ceil(totalRows / rowsPerPage);
-
-    for (let i = 1; i <= pageCount; i++) {
-      let li = document.createElement("li");
-      li.className = "page-item " + (i === currentPage ? "active" : "");
-
-      let btn = document.createElement("button");
-      btn.className = "page-link";
-      btn.innerText = i;
-
-      btn.addEventListener("click", () => {
-        currentPage = i;
-        displayTable();
+      filtered.slice(start, end).forEach(row => {
+        row.style.display = "";
       });
 
-      li.appendChild(btn);
-      pagination.appendChild(li);
+      setupPagination(filtered.length);
     }
-  }
 
-  // Event listeners
-  document.getElementById("searchInput").addEventListener("keyup", () => {
-    currentPage = 1;
+    function setupPagination(totalRows) {
+      const pagination = document.getElementById("pagination");
+      pagination.innerHTML = "";
+
+      let pageCount = Math.ceil(totalRows / rowsPerPage);
+
+      for (let i = 1; i <= pageCount; i++) {
+        let li = document.createElement("li");
+        li.className = "page-item " + (i === currentPage ? "active" : "");
+
+        let btn = document.createElement("button");
+        btn.className = "page-link";
+        btn.innerText = i;
+
+        btn.addEventListener("click", () => {
+          currentPage = i;
+          displayTable();
+        });
+
+        li.appendChild(btn);
+        pagination.appendChild(li);
+      }
+    }
+
+    // Event listeners
+    document.getElementById("searchInput").addEventListener("keyup", () => {
+      currentPage = 1;
+      displayTable();
+    });
+
+    document.getElementById("departmentFilter").addEventListener("change", () => {
+      currentPage = 1;
+      displayTable();
+    });
+
+    document.getElementById("genderFilter").addEventListener("change", () => {
+      currentPage = 1;
+      displayTable();
+    });
+
+    // Initial load
     displayTable();
-  });
-
-  document.getElementById("departmentFilter").addEventListener("change", () => {
-    currentPage = 1;
-    displayTable();
-  });
-
-  document.getElementById("genderFilter").addEventListener("change", () => {
-    currentPage = 1;
-    displayTable();
-  });
-
-  // Initial load
-  displayTable();
   </script>
 
   <!--Bootstrap-->
@@ -253,157 +274,157 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] != 'Admin') {
 
 
   <script>
-  const loadWatermark = (src) => {
-    return new Promise((resolve) => {
-      const img = new Image();
-      img.crossOrigin = "anonymous";
-
-      img.onload = () => {
-        const canvas = document.createElement("canvas");
-        const ctx = canvas.getContext("2d");
-
-        canvas.width = img.width;
-        canvas.height = img.height;
-
-        ctx.globalAlpha = 0.08; // 👈 faint watermark
-        ctx.drawImage(img, 0, 0);
-
-        resolve(canvas.toDataURL("image/png"));
-      };
-
-      img.src = src;
-    });
-  };
-  </script>
-
-  <script>
-  async function exportDoctorsPDF() {
-    const {
-      jsPDF
-    } = window.jspdf;
-    const doc = new jsPDF("l", "mm", "a4");
-
-    // =========================
-    // LOAD IMAGES
-    // =========================
-    const loadImage = (src) => {
+    const loadWatermark = (src) => {
       return new Promise((resolve) => {
         const img = new Image();
-        img.onload = () => resolve(img);
+        img.crossOrigin = "anonymous";
+
+        img.onload = () => {
+          const canvas = document.createElement("canvas");
+          const ctx = canvas.getContext("2d");
+
+          canvas.width = img.width;
+          canvas.height = img.height;
+
+          ctx.globalAlpha = 0.08; // 👈 faint watermark
+          ctx.drawImage(img, 0, 0);
+
+          resolve(canvas.toDataURL("image/png"));
+        };
+
         img.src = src;
       });
     };
+  </script>
 
-    const logo = await loadImage("../images/logo.png");
-    const watermark = await loadWatermark("../images/logo.png");
+  <script>
+    async function exportDoctorsPDF() {
+      const {
+        jsPDF
+      } = window.jspdf;
+      const doc = new jsPDF("l", "mm", "a4");
 
-    // =========================
-    // HEADER
-    // =========================
-    const hospitalName = "Healix Hospital";
-    const today = new Date().toLocaleDateString();
+      // =========================
+      // LOAD IMAGES
+      // =========================
+      const loadImage = (src) => {
+        return new Promise((resolve) => {
+          const img = new Image();
+          img.onload = () => resolve(img);
+          img.src = src;
+        });
+      };
 
-    doc.setFontSize(16);
-    doc.text(hospitalName, 14, 15);
+      const logo = await loadImage("../images/logo.png");
+      const watermark = await loadWatermark("../images/logo.png");
 
-    doc.setFontSize(10);
-    doc.text("Doctors List Report", 14, 22);
-    doc.text("Date: " + today, 250, 15);
+      // =========================
+      // HEADER
+      // =========================
+      const hospitalName = "HEALIX HOSPITAL";
+      const today = new Date().toLocaleDateString();
 
-    doc.addImage(logo, "PNG", 200, 5, 20, 20);
+      doc.setFontSize(16);
+      doc.text(hospitalName, 14, 15);
 
-    // =========================
-    // TABLE DATA (FILTERED + ALL PAGES)
-    // =========================
-    let filtered = filterRows(); // uses your existing filter function
+      doc.setFontSize(10);
+      doc.text("Doctors List Report", 14, 22);
+      doc.text("Date: " + today, 250, 15);
 
-    let data = [];
+      doc.addImage(logo, "PNG", 200, 5, 20, 20);
 
-    filtered.forEach((row, index) => {
-      let cells = row.querySelectorAll("td");
+      // =========================
+      // TABLE DATA (FILTERED + ALL PAGES)
+      // =========================
+      let filtered = filterRows(); // uses your existing filter function
 
-      data.push([
-        index + 1,
-        cells[1].innerText,
-        cells[2].innerText,
-        cells[3].innerText,
-        cells[4].innerText,
-        cells[5].innerText,
-        cells[6].innerText,
-        cells[7].innerText,
-        cells[8].innerText,
-        cells[9].innerText
-        // ❌ NO ACTION COLUMN (skipped)
-      ]);
-    });
+      let data = [];
 
-    const headers = [
-      "S/N",
-      "Doctor ID",
-      "Full Name",
-      "Gender",
-      "Specialty",
-      "Department",
-      "Phone",
-      "Email",
-      "Patients",
-      "Date Joined"
-    ];
+      filtered.forEach((row, index) => {
+        let cells = row.querySelectorAll("td");
 
-    doc.autoTable({
-      startY: 30,
-      head: [headers],
-      body: data,
-      theme: "grid",
-      styles: {
-        fontSize: 8
-      },
-      headStyles: {
-        fillColor: [0, 102, 204]
-      },
+        data.push([
+          index + 1,
+          cells[1].innerText,
+          cells[2].innerText,
+          cells[3].innerText,
+          cells[4].innerText,
+          cells[5].innerText,
+          cells[6].innerText,
+          cells[7].innerText,
+          cells[8].innerText,
+          cells[9].innerText
+          // ❌ NO ACTION COLUMN (skipped)
+        ]);
+      });
 
-      didDrawPage: function() {
-        const pageWidth = doc.internal.pageSize.getWidth();
-        const pageHeight = doc.internal.pageSize.getHeight();
+      const headers = [
+        "S/N",
+        "Doctor ID",
+        "Full Name",
+        "Gender",
+        "Specialty",
+        "Department",
+        "Phone",
+        "Email",
+        "Patients",
+        "Date Joined"
+      ];
 
-        // Watermark
-        doc.addImage(
-          watermark,
-          "PNG",
-          pageWidth / 2 - 40,
-          pageHeight / 2 - 40,
-          80,
-          80
+      doc.autoTable({
+        startY: 30,
+        head: [headers],
+        body: data,
+        theme: "grid",
+        styles: {
+          fontSize: 8
+        },
+        headStyles: {
+          fillColor: [0, 102, 204]
+        },
+
+        didDrawPage: function() {
+          const pageWidth = doc.internal.pageSize.getWidth();
+          const pageHeight = doc.internal.pageSize.getHeight();
+
+          // Watermark
+          doc.addImage(
+            watermark,
+            "PNG",
+            pageWidth / 2 - 40,
+            pageHeight / 2 - 40,
+            80,
+            80
+          );
+        }
+      });
+
+      // =========================
+      // SIGNATURE SECTION
+      // =========================
+      let finalY = doc.lastAutoTable.finalY + 20;
+
+      doc.line(200, finalY, 270, finalY);
+      doc.setFontSize(10);
+      doc.text("Admin Signature", 210, finalY + 5);
+      doc.text("Authorized Signatory", 205, finalY + 12);
+
+      // =========================
+      // PAGE NUMBERS
+      // =========================
+      let pageCount = doc.internal.getNumberOfPages();
+
+      for (let i = 1; i <= pageCount; i++) {
+        doc.setPage(i);
+        doc.text(
+          `Page ${i} of ${pageCount}`,
+          doc.internal.pageSize.getWidth() - 40,
+          doc.internal.pageSize.getHeight() - 10
         );
       }
-    });
 
-    // =========================
-    // SIGNATURE SECTION
-    // =========================
-    let finalY = doc.lastAutoTable.finalY + 20;
-
-    doc.line(200, finalY, 270, finalY);
-    doc.setFontSize(10);
-    doc.text("Admin Signature", 210, finalY + 5);
-    doc.text("Authorized Signatory", 205, finalY + 12);
-
-    // =========================
-    // PAGE NUMBERS
-    // =========================
-    let pageCount = doc.internal.getNumberOfPages();
-
-    for (let i = 1; i <= pageCount; i++) {
-      doc.setPage(i);
-      doc.text(
-        `Page ${i} of ${pageCount}`,
-        doc.internal.pageSize.getWidth() - 40,
-        doc.internal.pageSize.getHeight() - 10
-      );
+      doc.save("Doctors_List.pdf");
     }
-
-    doc.save("Doctors_List.pdf");
-  }
   </script>
 
 

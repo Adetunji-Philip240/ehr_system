@@ -48,6 +48,23 @@ $pendingRelease = $conn->query("
 
   <!--Custom CSS-->
   <link rel="stylesheet" href="../styles.css" />
+
+  <!--Chart.js-->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <style>
+    .card {
+      background: #0f172a;
+      /* dark navy */
+      color: #fff;
+      border-radius: 12px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+    }
+
+    canvas {
+      margin-top: 15px;
+    }
+  </style>
 </head>
 
 <body>
@@ -71,7 +88,7 @@ $pendingRelease = $conn->query("
     <div class="top-bar d-flex justify-content-between p-4 fs-3">
       <li>Hello Admin</li>
       <li>
-        <a href="admin-logout.php"><i class="fas fa-sign-out-alt"></i></a>
+        <a href="../backend/logout.php"><i class="fas fa-sign-out-alt"></i></a>
       </li>
     </div>
 
@@ -99,7 +116,7 @@ $pendingRelease = $conn->query("
           <div class="blockA text-center">
             <p class="fw-bold fs-6">Number of Records</p>
             <p class="fs-3"><?= $recordCount ?></p>
-            <a href="add_patients.php">
+            <a href="records_list.php">
               <button class="btnA">View Records</button></a>
           </div>
         </div>
@@ -113,29 +130,196 @@ $pendingRelease = $conn->query("
           </div>
         </div>
       </div>
+
+      <!--Charts Section-->
+
+      <div class="container mt-5">
+        <div class="row">
+
+          <div class="col-md-6 mb-4">
+            <div class="card p-3">
+              <h5 class="text-center">Doctor vs Assignments</h5>
+              <canvas id="doctorChart"></canvas>
+            </div>
+          </div>
+
+          <div class="col-md-6 mb-4">
+            <div class="card p-3">
+              <h5 class="text-center">Patients vs Records</h5>
+              <canvas id="patientChart"></canvas>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <div style="margin-top: 100px"></div>
+  <!--Bottom Navbar-->
+
+  <div id="bottom-navbar" class="navbar navbar-expand-sm fixed-bottom d-lg-none d-md-none">
+    <div class="container-fluid d-flex justify-content-between">
+      <a style="
+            border: 1px solid var(--color2);
+            color: var(--color2);
+            padding: 5px;
+            border-radius: 10px;"> <i class=" fas fa-chart-line mx-3 fs-4"></i> <br /><span
+          style="font-size: 10px">DASHBOARD</span></a>
+
+
+      <a href="doctors.php"><i class="fas fa-user-md mx-3 fs-4"></i> <br /><span
+          style="font-size: 10px">DOCTORS</span></a>
+
+      <a href="patients.php"><i class="fas fa-user mx-3 fs-4"></i> <br /><span
+          style="font-size: 10px">PATIENTS</span></a>
     </div>
   </div>
 
   <!--New Request for release-->
   <script>
-  function fetchPending() {
-    fetch("../backend/get_pending.php")
-      .then(response => response.text())
-      .then(data => {
-        document.getElementById("pending_release").innerText = data;
-      })
-      .catch(err => console.log(err));
-  }
+    function fetchPending() {
+      fetch("../backend/get_pending.php")
+        .then(response => response.text())
+        .then(data => {
+          document.getElementById("pending_release").innerText = data;
+        })
+        .catch(err => console.log(err));
+    }
 
-  // Run immediately
-  fetchPending();
+    // Run immediately
+    fetchPending();
 
-  // Auto refresh every 5 seconds
-  setInterval(fetchPending, 5000);
+    // Auto refresh every 5 seconds
+    setInterval(fetchPending, 5000);
   </script>
 
   <!--Bootstrap-->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+
+  <script>
+    let doctorChart;
+    let patientChart;
+
+    function createGradient(ctx, color) {
+      const gradient = ctx.createLinearGradient(0, 0, 0, 400);
+      gradient.addColorStop(0, color);
+      gradient.addColorStop(1, "rgba(42,142,241,0.2)");
+      return gradient;
+    }
+
+    function loadCharts() {
+      fetch("../backend/dashboard_data.php")
+        .then(res => res.json())
+        .then(data => {
+
+          // Destroy old charts
+          if (doctorChart) doctorChart.destroy();
+          if (patientChart) patientChart.destroy();
+
+          // ===== DOCTOR CHART =====
+          const ctx1 = document.getElementById("doctorChart").getContext("2d");
+          const gradient1 = createGradient(ctx1, "#2a8ef1");
+
+          doctorChart = new Chart(ctx1, {
+            type: 'bar',
+            data: {
+              labels: data.doctorLabels,
+              datasets: [{
+                label: 'Assignments',
+                data: data.doctorData,
+                backgroundColor: gradient1,
+                borderRadius: 10, // 🔵 Rounded bars
+                borderSkipped: false
+              }]
+            },
+            options: {
+              responsive: true,
+              plugins: {
+                legend: {
+                  labels: {
+                    color: "#fff" // 🌙 Dark mode text
+                  }
+                }
+              },
+              scales: {
+                x: {
+                  ticks: {
+                    color: "#ccc"
+                  },
+                  grid: {
+                    color: "rgba(255,255,255,0.1)"
+                  }
+                },
+                y: {
+                  beginAtZero: true,
+                  ticks: {
+                    color: "#ccc"
+                  },
+                  grid: {
+                    color: "rgba(255,255,255,0.1)"
+                  }
+                }
+              }
+            }
+          });
+
+          // ===== PATIENT CHART =====
+          const ctx2 = document.getElementById("patientChart").getContext("2d");
+          const gradient2 = createGradient(ctx2, "#2a8ef1");
+
+          patientChart = new Chart(ctx2, {
+            type: 'bar',
+            data: {
+              labels: data.patientLabels,
+              datasets: [{
+                label: 'Records',
+                data: data.patientData,
+                backgroundColor: gradient2,
+                borderRadius: 10,
+                borderSkipped: false
+              }]
+            },
+            options: {
+              responsive: true,
+              plugins: {
+                legend: {
+                  labels: {
+                    color: "#fff"
+                  }
+                }
+              },
+              scales: {
+                x: {
+                  ticks: {
+                    color: "#ccc"
+                  },
+                  grid: {
+                    color: "rgba(255,255,255,0.1)"
+                  }
+                },
+                y: {
+                  beginAtZero: true,
+                  ticks: {
+                    color: "#ccc"
+                  },
+                  grid: {
+                    color: "rgba(255,255,255,0.1)"
+                  }
+                }
+              }
+            }
+          });
+
+        });
+    }
+
+    // Load + auto refresh
+    loadCharts();
+    setInterval(loadCharts, 5000);
+  </script>
 
   <!--Custom JS-->
   <script src="../index.js"></script>
